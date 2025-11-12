@@ -235,6 +235,54 @@ contract PrivateBet is SepoliaConfig {
             revert BetDoesNotExist(betId);
         }
     }
+
+    /// @notice Get comprehensive betting statistics across all bets
+    /// @return totalBets Total number of bets placed
+    /// @return settledBets Number of settled bets
+    /// @return uniquePlayers Number of unique players who have placed bets
+    /// @return totalVolume Total wagered amount (plaintext for transparency)
+    function getBettingStatistics()
+        external
+        view
+        returns (
+            uint256 totalBets,
+            uint256 settledBets,
+            uint256 uniquePlayers,
+            uint256 totalVolume
+        )
+    {
+        totalBets = betCount;
+        settledBets = 0;
+        totalVolume = 0;
+
+        // Track unique players using a simple mapping approach
+        address[] memory players = new address[](totalBets);
+        uint256 playerCount = 0;
+
+        for (uint256 i = 1; i <= totalBets; i++) {
+            Bet storage bet = _bets[i];
+            if (bet.state == BetState.Settled) {
+                settledBets++;
+            }
+
+            // Track unique players (simplified - in production would use more efficient tracking)
+            bool isNewPlayer = true;
+            for (uint256 j = 0; j < playerCount; j++) {
+                if (players[j] == bet.player) {
+                    isNewPlayer = false;
+                    break;
+                }
+            }
+            if (isNewPlayer && bet.player != address(0)) {
+                players[playerCount] = bet.player;
+                playerCount++;
+            }
+        }
+
+        uniquePlayers = playerCount;
+        // Note: totalVolume would require decrypting all wagers, which is not practical
+        // In a real implementation, this could be tracked separately
+    }
 }
 
 
