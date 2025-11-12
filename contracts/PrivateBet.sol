@@ -96,6 +96,58 @@ contract PrivateBet is SepoliaConfig {
         emit BetSettled(betId, msg.sender);
     }
 
+    /// @notice Place multiple bets in a single transaction for gas efficiency
+    /// @param wagers Array of encrypted wager amounts
+    /// @param guesses Array of encrypted guess values (0=even, 1=odd)
+    /// @param wagerProofs Array of FHE input proofs for wagers
+    /// @param guessProofs Array of FHE input proofs for guesses
+    /// @return betIds Array of created bet IDs
+    function batchPlaceBets(
+        externalEuint64[] memory wagers,
+        externalEuint8[] memory guesses,
+        bytes[] memory wagerProofs,
+        bytes[] memory guessProofs
+    ) external returns (uint256[] memory betIds) {
+        require(wagers.length == guesses.length && wagers.length == wagerProofs.length && wagers.length == guessProofs.length, "Array length mismatch");
+        require(wagers.length > 0 && wagers.length <= 5, "Batch size limited to 5 bets for gas efficiency");
+
+        betIds = new uint256[](wagers.length);
+
+        for (uint256 i = 0; i < wagers.length; i++) {
+            euint64 wager = FHE.fromExternal(wagers[i], wagerProofs[i]);
+            euint8 guess = FHE.fromExternal(guesses[i], guessProofs[i]);
+
+            // Random encrypted outcome: 0 (even) or 1 (odd)
+            euint8 outcome = FHE.randEuint8(2);
+
+            // Determine winner and payout = wager * 2 if guess == outcome else 0
+            ebool isWinner = FHE.eq(guess, outcome);
+            euint64 doubleStake = FHE.mul(wager, uint64(2));
+            euint64 winMultiplier = FHE.asEuint64(isWinner);
+            euint64 payout = FHE.mul(doubleStake, winMultiplier);
+
+            // Persist bet
+            uint256 betId = ++betCount;
+            Bet storage bet = _bets[betId];
+            bet.player = msg.sender;
+            bet.wager = wager;
+            bet.guess = guess;
+            bet.outcome = outcome;
+            bet.payout = payout;
+            bet.createdAt = uint64(block.timestamp);
+            bet.state = BetState.Settled;
+
+            _allowValues(bet, HOUSE);
+            _allowPlayer(bet, msg.sender);
+            _grantViewer(betId, msg.sender);
+            _grantViewer(betId, HOUSE);
+
+            betIds[i] = betId;
+            emit BetPlaced(betId, msg.sender);
+            emit BetSettled(betId, msg.sender);
+        }
+    }
+
     /// @notice Returns basic bet metadata.
     /// @param betId Identifier returned by `placeBet`.
     /// @return player Address of the bettor.
