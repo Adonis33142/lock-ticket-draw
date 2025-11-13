@@ -228,12 +228,19 @@ contract PrivateBet is SepoliaConfig {
         return _betViewers[betId][account];
     }
 
-    // solhint-disable-next-line use-natspec
+        // solhint-disable-next-line use-natspec
     function _storedBet(uint256 betId) private view returns (Bet storage bet) {
         bet = _bets[betId];
         if (bet.state == BetState.None) {
             revert BetDoesNotExist(betId);
         }
+    }
+
+    /// @notice Internal function to grant viewing permissions for a bet
+    /// @param betId The ID of the bet
+    /// @param viewer The address to grant viewing permission
+    function _grantViewer(uint256 betId, address viewer) internal {
+        _betViewers[betId][viewer] = true;
     }
 
     /// @notice Get comprehensive betting statistics across all bets
