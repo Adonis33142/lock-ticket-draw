@@ -283,6 +283,42 @@ contract PrivateBet is SepoliaConfig {
         // Note: totalVolume would require decrypting all wagers, which is not practical
         // In a real implementation, this could be tracked separately
     }
+
+    /// @notice Get detailed information about a specific bet
+    /// @param betId The ID of the bet to query
+    /// @return player The address of the bettor
+    /// @return wager The encrypted wager amount
+    /// @return guess The encrypted guess value
+    /// @return outcome The encrypted outcome value
+    /// @return payout The encrypted payout amount
+    /// @return createdAt Timestamp when the bet was created
+    /// @return state Current state of the bet
+    function getBetDetails(uint256 betId)
+        external
+        view
+        returns (
+            address player,
+            euint64 wager,
+            euint8 guess,
+            euint8 outcome,
+            euint64 payout,
+            uint64 createdAt,
+            BetState state
+        )
+    {
+        Bet storage bet = _storedBet(betId);
+        require(_isViewer(betId, msg.sender), "Not authorized to view bet details");
+
+        return (
+            bet.player,
+            bet.wager,
+            bet.guess,
+            bet.outcome,
+            bet.payout,
+            bet.createdAt,
+            bet.state
+        );
+    }
 }
 
 
