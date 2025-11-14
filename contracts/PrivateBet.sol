@@ -134,8 +134,11 @@ contract PrivateBet is SepoliaConfig {
             euint64 winMultiplier = FHE.asEuint64(isWinner);
             euint64 payout = FHE.mul(doubleStake, winMultiplier);
 
-            // Persist bet
-            uint256 betId = ++betCount;
+            // Persist bet with gas optimization
+            uint256 betId;
+            unchecked {
+                betId = ++betCount;
+            }
             Bet storage bet = _bets[betId];
             bet.player = msg.sender;
             bet.wager = wager;
