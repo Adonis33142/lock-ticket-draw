@@ -111,6 +111,14 @@ contract PrivateBet is SepoliaConfig {
         require(wagers.length == guesses.length && wagers.length == wagerProofs.length && wagers.length == guessProofs.length, "Array length mismatch");
         require(wagers.length > 0 && wagers.length <= 5, "Batch size limited to 5 bets for gas efficiency");
 
+        // Additional validation for batch operations
+        for (uint256 i = 0; i < wagers.length; i++) {
+            require(wagers[i] != externalEuint64.wrap(0), "Wager amount cannot be zero");
+            require(guesses[i] != externalEuint8.wrap(0), "Guess value cannot be zero");
+            require(wagerProofs[i].length > 0, "Wager proof cannot be empty");
+            require(guessProofs[i].length > 0, "Guess proof cannot be empty");
+        }
+
         betIds = new uint256[](wagers.length);
 
         for (uint256 i = 0; i < wagers.length; i++) {
