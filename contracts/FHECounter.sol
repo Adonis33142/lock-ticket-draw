@@ -22,6 +22,8 @@ contract FHECounter is SepoliaConfig {
     /// @dev This example omits overflow/underflow checks for simplicity and readability.
     /// In a production contract, proper range checks should be implemented.
     function increment(externalEuint32 inputEuint32, bytes calldata inputProof) external {
+        require(inputProof.length > 0, "Input proof cannot be empty");
+
         euint32 encryptedEuint32 = FHE.fromExternal(inputEuint32, inputProof);
 
         _count = FHE.add(_count, encryptedEuint32);
