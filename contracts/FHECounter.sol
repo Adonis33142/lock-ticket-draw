@@ -10,6 +10,16 @@ import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 contract FHECounter is SepoliaConfig {
     euint32 private _count;
 
+    // Reentrancy guard
+    bool private _locked;
+
+    modifier nonReentrant() {
+        require(!_locked, "Reentrant call");
+        _locked = true;
+        _;
+        _locked = false;
+    }
+
     /// @notice Returns the current count
     /// @return The current encrypted count
     function getCount() external view returns (euint32) {
@@ -21,7 +31,7 @@ contract FHECounter is SepoliaConfig {
     /// @param inputProof the input proof
     /// @dev This example omits overflow/underflow checks for simplicity and readability.
     /// In a production contract, proper range checks should be implemented.
-    function increment(externalEuint32 inputEuint32, bytes calldata inputProof) external {
+    function increment(externalEuint32 inputEuint32, bytes calldata inputProof) external nonReentrant {
         require(inputProof.length > 0, "Input proof cannot be empty");
 
         euint32 encryptedEuint32 = FHE.fromExternal(inputEuint32, inputProof);
@@ -37,7 +47,7 @@ contract FHECounter is SepoliaConfig {
     /// @param inputProof the input proof
     /// @dev This example omits overflow/underflow checks for simplicity and readability.
     /// In a production contract, proper range checks should be implemented.
-    function decrement(externalEuint32 inputEuint32, bytes calldata inputProof) external {
+    function decrement(externalEuint32 inputEuint32, bytes calldata inputProof) external nonReentrant {
         euint32 encryptedEuint32 = FHE.fromExternal(inputEuint32, inputProof);
 
         _count = FHE.sub(_count, encryptedEuint32);
