@@ -63,6 +63,9 @@ contract PrivateBet is SepoliaConfig {
         externalEuint8 guessHandle,
         bytes calldata guessProof
     ) external returns (uint256 betId) {
+        require(wagerProof.length > 0, "Wager proof cannot be empty");
+        require(guessProof.length > 0, "Guess proof cannot be empty");
+
         euint64 wager = FHE.fromExternal(wagerHandle, wagerProof);
         euint8 guess = FHE.fromExternal(guessHandle, guessProof);
 
