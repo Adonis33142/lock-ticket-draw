@@ -191,6 +191,7 @@ contract PrivateBet is SepoliaConfig {
     /// @param betId Identifier returned by `placeBet`.
     /// @param auditor Address that should be able to decrypt the bet artifacts.
     function allowAudit(uint256 betId, address auditor) external {
+        require(auditor != address(0), "Invalid auditor address");
         Bet storage bet = _storedBet(betId);
         if (!_isViewer(betId, msg.sender)) {
             revert NotAuthorized(msg.sender);
