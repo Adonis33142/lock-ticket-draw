@@ -34,6 +34,9 @@ contract PrivateBet is SepoliaConfig {
     mapping(uint256 betId => Bet betData) private _bets;
     mapping(uint256 betId => mapping(address viewer => bool allowed)) private _betViewers;
 
+    // Rate limiting: last bet placement time per user
+    mapping(address => uint256) private _lastBetTime;
+
     /// @notice Emitted when a bet is placed and immediately settled.
     /// @param betId Numeric identifier of the bet.
     /// @param player Address that submitted the encrypted wager.
@@ -65,6 +68,7 @@ contract PrivateBet is SepoliaConfig {
     ) external returns (uint256 betId) {
         require(wagerProof.length > 0, "Wager proof cannot be empty");
         require(guessProof.length > 0, "Guess proof cannot be empty");
+        require(block.timestamp >= _lastBetTime[msg.sender] + 30 seconds, "Rate limit: wait 30 seconds between bets");
 
         euint64 wager = FHE.fromExternal(wagerHandle, wagerProof);
         euint8 guess = FHE.fromExternal(guessHandle, guessProof);
@@ -94,6 +98,8 @@ contract PrivateBet is SepoliaConfig {
         _allowPlayer(bet, msg.sender);
         _grantViewer(betId, msg.sender);
         _grantViewer(betId, HOUSE);
+
+        _lastBetTime[msg.sender] = block.timestamp;
 
         emit BetPlaced(betId, msg.sender);
         emit BetSettled(betId, msg.sender);
