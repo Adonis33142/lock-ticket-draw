@@ -75,6 +75,14 @@ export const PrivateBetApp = () => {
   const [wagerInput, setWagerInput] = useState<string>("50");
   const [selectedGuess, setSelectedGuess] = useState<0 | 1>(0);
 
+  // Batch betting state
+  const [showBatchBetting, setShowBatchBetting] = useState(false);
+  const [batchBets, setBatchBets] = useState<Array<{wager: string, guess: 0 | 1}>>([
+    { wager: "25", guess: 0 },
+    { wager: "25", guess: 1 }
+  ]);
+  const [isBatchBetting, setIsBatchBetting] = useState(false);
+
   const bet = usePrivateBet({
     instance: fhevmInstance,
     initialMockChains,
@@ -90,7 +98,43 @@ export const PrivateBetApp = () => {
     await bet.placeBet({ wager, guess: selectedGuess });
   };
 
+  const handleBatchBet = async () => {
+    if (!isConnected || isBatchBetting) return;
+
+    // Validate batch bets
+    const validBets = batchBets.filter(b => b.wager.trim().length > 0);
+    if (validBets.length === 0) return;
+
+    setIsBatchBetting(true);
+    try {
+      await bet.batchPlaceBets(validBets);
+    } catch (error) {
+      console.error("Batch betting error:", error);
+    } finally {
+      setIsBatchBetting(false);
+    }
+  };
+
+  const addBatchBet = () => {
+    if (batchBets.length < 5) {
+      setBatchBets([...batchBets, { wager: "25", guess: 0 }]);
+    }
+  };
+
+  const removeBatchBet = (index: number) => {
+    if (batchBets.length > 1) {
+      setBatchBets(batchBets.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateBatchBet = (index: number, field: 'wager' | 'guess', value: string | number) => {
+    const newBets = [...batchBets];
+    newBets[index] = { ...newBets[index], [field]: value };
+    setBatchBets(newBets);
+  };
+
   const canSubmit = isConnected && !bet.isProcessing && wagerInput.trim().length > 0;
+  const canBatchSubmit = isConnected && !isBatchBetting && batchBets.some(b => b.wager.trim().length > 0);
 
   const winnersFeed = useMemo(() => {
     const dynamic = bet.history
