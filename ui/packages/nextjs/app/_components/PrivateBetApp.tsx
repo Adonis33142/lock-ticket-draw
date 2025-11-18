@@ -83,6 +83,10 @@ export const PrivateBetApp = () => {
   ]);
   const [isBatchBetting, setIsBatchBetting] = useState(false);
 
+  // Error and success states
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const bet = usePrivateBet({
     instance: fhevmInstance,
     initialMockChains,
@@ -90,12 +94,38 @@ export const PrivateBetApp = () => {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     const wager = Number(wagerInput);
-    if (Number.isNaN(wager)) {
-      setWagerInput("");
-      return bet.placeBet({ wager: 0, guess: selectedGuess });
+    if (Number.isNaN(wager) || wager <= 0) {
+      setError("Please enter a valid wager amount greater than 0");
+      return;
     }
-    await bet.placeBet({ wager, guess: selectedGuess });
+
+    if (wager > 10000) {
+      setError("Maximum wager amount is 10,000 credits");
+      return;
+    }
+
+    try {
+      setError(null);
+      if (Number.isNaN(wager)) {
+        setWagerInput("");
+        await bet.placeBet({ wager: 0, guess: selectedGuess });
+      } else {
+        await bet.placeBet({ wager, guess: selectedGuess });
+      }
+      setSuccess("Bet placed successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      console.error("Betting error:", err);
+      const errorMessage = err?.message?.includes("Rate limit")
+        ? "Please wait 30 seconds before placing another bet"
+        : err?.message?.includes("proof")
+        ? "Encryption proof validation failed"
+        : "Failed to place bet. Please try again.";
+      setError(errorMessage);
+      setTimeout(() => setError(null), 5000);
+    }
   };
 
   const handleBatchBet = async () => {
