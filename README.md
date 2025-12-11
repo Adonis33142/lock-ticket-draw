@@ -4,7 +4,7 @@ A privacy-preserving gaming platform built with [Zama's FHEVM](https://docs.zama
 
 ## 🎬 Live Demo
 
-🚀 **Try it now**: [https://shadow-cipher-clash.vercel.app/](https://shadow-cipher-clash.vercel.app/)
+🚀 **Try it now**: [https://lock-ticket-draw-nhqle.vercel.app/](https://lock-ticket-draw-nhqle.vercel.app/)
 
 📹 **Demo Video**: [Watch the demo](./shadow.mp4)
 
@@ -425,7 +425,7 @@ This project is licensed under the BSD-3-Clause-Clear License - see the [LICENSE
 ## 📞 Support
 
 - **GitHub**: https://github.com/Adonis33142/lock-ticket-draw
-- **Live Demo**: https://shadow-cipher-clash.vercel.app/
+- **Live Demo**: https://lock-ticket-draw-nhqle.vercel.app/
 - **Zama Docs**: https://docs.zama.ai/fhevm
 - **Zama Discord**: https://discord.com/invite/fhe-org
 
